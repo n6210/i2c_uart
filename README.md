@@ -2,7 +2,15 @@
 
 Simple converter from I2C to UART.
 Can be used for print out logs when the UART is used for other purposes.
-I2C slave address is 0x22, console speed is 230400 boud.
+
+General features:
+- I2C slave address is 0x22
+- I2C maximal boudrate is 100kbit
+- console speed is 230400 boud
+
+Important notice:
+ Because of a very low resources, this converter uses a clock stretching
+ every received byte when it's sent via UART.
 
 Using:
  write logs to address 0x22 as I2C packets
