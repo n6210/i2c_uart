@@ -19,9 +19,9 @@
 #define R_SDA			(PINB & SDA)
 #define R_BOTH			(PINB & (SDA|SCL))
 
-#define TEST			_BV(PB2)
-#define TEST_L			PORTB &= ~TEST;
-#define TEST_H			PORTB |= TEST;
+#define LED				_BV(PB2)
+#define LED_L()			PORTB &= ~LED;
+#define LED_H()			PORTB |= LED;
 
 #define BUS_FREE_TIME	100 // in usec
 
@@ -132,7 +132,7 @@ void i2c_wait_for_start(void)
 {
 	uint8_t register cnt = BUS_FREE_TIME;
 
-	TEST_H;
+	LED_H();
 
 	DDRB &= ~(SCL|SDA); // SDA|SCL in
 	PORTB &= ~(SCL|SDA); // Hiz
@@ -164,10 +164,10 @@ ISR(PCINT0_vect)
 	if (pin & SCL) {
 		if ((pin & SDA) == 0) {
 			status = SEQ_START;
-			TEST_L;
+			LED_L();
 		} else {
 			status = SEQ_STOP;
-			TEST_H;
+			LED_H();
 		}
 	}
 }
@@ -181,7 +181,7 @@ int main(void)
 	GIFR |= _BV(PCIF);
 
 	uart_setup();
-	DDRB |= TEST;
+	DDRB |= LED;
 
 	uart_puts("\nI2C to UART\n");
 	cli();
