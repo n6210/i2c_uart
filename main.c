@@ -23,7 +23,7 @@
 #define LED_L()			PORTB &= ~LED;
 #define LED_H()			PORTB |= LED;
 
-#define BUS_FREE_TIME	100 // in usec
+#define BUS_FREE_TIME	5 // in usec
 
 #define nop() do { __asm__ __volatile__ ("nop"); } while (0)
 #define irq_en() do { GIFR |= _BV(PCIF); nop(); sei(); } while (0)
@@ -183,7 +183,7 @@ int main(void)
 	uart_setup();
 	DDRB |= LED;
 
-	uart_puts("\nI2C to UART\n");
+	uart_puts("\nI2C-UART\n");
 	cli();
 
 	while (1) {
