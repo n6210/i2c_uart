@@ -39,28 +39,26 @@ volatile int8_t status = 0;
 
 void __inline i2c_clk_keep(void)
 {
-	DDRB |= SCL;
-	PORTB &= ~SCL;
-	nop();
+	DDRB |= SCL; // SCL out
+	PORTB &= ~SCL; // SCL=0
+	nop(); // for sync
 }
 
 void __inline i2c_clk_free(void)
 {
-	DDRB &= ~SCL;
-	PORTB &= ~SCL;
-	nop();
+	DDRB &= ~SCL; // SCL in
+	nop(); // for sync
 }
 
 void __inline i2c_ack(void)
 {
-	DDRB |= SDA; // SDA as out
+	DDRB |= SDA;   // SDA as out
 	PORTB &= ~SDA; // Set ACK (SDA=0)
-	nop();
-	while (R_SCL == 0); // Wait for SCL=1
+	nop();         // For synchronization
+	while (!R_SCL); // Wait for SCL=1
 	while (R_SCL); // Wait for SCL=0
-	DDRB &= ~SDA; // SDA as in
-	PORTB &= ~SDA; // HiZ
-	nop();
+	DDRB &= ~SDA;  // SDA as in
+	nop();         // For synchronization
 }
 
 void __inline i2c_detect_addr(void)
@@ -69,9 +67,8 @@ void __inline i2c_detect_addr(void)
 	uint8_t i;
 	uint8_t d = 0;
 
-TEST_L;
 	for (i = 0; i < 8; i++) {
-		while (R_SCL == 0); // Wait for SCL=1
+		while (!R_SCL); // Wait for SCL=1
 		// Get SDA state
 		if (R_SDA) {
 			d |= 1 << bshift;
@@ -95,7 +92,6 @@ TEST_L;
 		i2c_ack(); // ACK on our addr
 	} else {
 		status = SEQ_BUS_FREE;
-		//TEST_H;
 		irq_en();
 	}
 }
@@ -108,7 +104,7 @@ uint8_t __inline i2c_get_byte(void)
 
 	cli();
 	for (i = 0; i < 8; i++) {
-		while (R_SCL == 0); // Wait for SCL=1
+		while (!R_SCL); // Wait for SCL=1
 		// Get SDA state
 		if (R_SDA) {
 			d |= 1 << bshift;
@@ -139,7 +135,7 @@ void i2c_wait_for_start(void)
 	TEST_H;
 
 	DDRB &= ~(SCL|SDA); // SDA|SCL in
-	PORTB |= (SCL|SDA); // Hiz
+	PORTB &= ~(SCL|SDA); // Hiz
 
 	// Wait for SCL=1 & SDA=1 stable for 100us
 	while (cnt) {
