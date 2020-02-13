@@ -4,9 +4,10 @@
  */
 
 #include <stdint.h>
-#include <avr/io.h>
 #include <util/delay.h>
+#include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
 #include "uart.h"
 
 #define I2C_SLAVE_ADDR	(0x22 << 1)
@@ -35,6 +36,7 @@ enum {
 	SEQ_STOP
 };
 
+// Internal I2C status
 volatile int8_t status = 0;
 
 void __inline i2c_clk_keep(void)
@@ -94,6 +96,8 @@ void __inline i2c_detect_addr(void)
 		status = SEQ_BUS_FREE;
 		irq_en();
 	}
+
+	wdt_reset();
 }
 
 uint8_t __inline i2c_get_byte(void)
@@ -122,7 +126,9 @@ uint8_t __inline i2c_get_byte(void)
 		}
 		bshift--;
 	}
+
 	i2c_ack();
+	wdt_reset();
 	irq_en();
 
 	return d;
@@ -133,11 +139,12 @@ void i2c_wait_for_start(void)
 	uint8_t register cnt = BUS_FREE_TIME;
 
 	LED_H();
-
 	DDRB &= ~(SCL|SDA); // SDA|SCL in
 	PORTB &= ~(SCL|SDA); // Hiz
 
-	// Wait for SCL=1 & SDA=1 stable for 100us
+	wdt_reset();
+
+	// Wait for SCL=1 & SDA=1 stable for BUS_FREE_TIME
 	while (cnt) {
 		if (R_BOTH != (SCL|SDA))
 			cnt = BUS_FREE_TIME;
@@ -150,15 +157,23 @@ void i2c_wait_for_start(void)
 
 	irq_en();
 
-	while (status != SEQ_START);
+	// Wait for detecting START sequence
+	while (status != SEQ_START) {
+		wdt_reset();
+	}
 	cli();
 
-	while (R_BOTH); // Full bus ready SLC=0 SDA=0
+	// Wait for SLC=0 SDA=0
+	while (R_BOTH) { 
+		wdt_reset();
+	}
 }
 
 ISR(PCINT0_vect)
 {
 	uint8_t register pin;
+
+	wdt_reset();
 
 	pin = PINB;
 	if (pin & SCL) {
@@ -172,6 +187,11 @@ ISR(PCINT0_vect)
 	}
 }
 
+ISR(WDT_vect)
+{
+	uart_puts("\nI2C-UART (WDT reset)\n");
+}
+
 int main(void)
 {
 	uint8_t register byte;
@@ -179,11 +199,13 @@ int main(void)
 	PCMSK = MASK_SDA;
 	GIMSK |= _BV(PCIE);
 	GIFR |= _BV(PCIF);
-
-	uart_setup();
 	DDRB |= LED;
 
-	uart_puts("\nI2C-UART\n");
+	uart_setup(); // Setup UART Tx pin as out
+
+	wdt_enable(WDTO_15MS); // Set prescaler to 15ms
+	WDTCR |= _BV(WDTIE); // Enable WD irq
+
 	cli();
 
 	while (1) {

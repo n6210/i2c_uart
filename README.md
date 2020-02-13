@@ -5,6 +5,7 @@ Can be used for print out logs when the UART is used for other purposes.
 
 General features:
 - ATtiny13 CPU @9.6MHz
+- Watchdog supported (15ms)
 - Full soft I2C slave (uses PCINT)
 - Soft TX UART by Lukasz Podkalicki
 - I2C slave address is 0x22 (as i2C to USB FTDI chips)
@@ -34,5 +35,4 @@ Makefile and UART code is overtaken from (and based on) Lukasz Marcin Podkalicki
 See:
 	https://blog.podkalicki.com/100-projects-on-attiny13/
 
-TODO: watchdog support
 
