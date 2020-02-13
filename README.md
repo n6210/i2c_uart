@@ -31,6 +31,8 @@ Important notice:
 
 The file avrdude.conf is a modified version for my own FTDI programmer board.
 
+![Schematic](i2c_slave_uart_attiny13.png?raw=true "Schematic")
+
 Makefile and UART code is overtaken from (and based on) Lukasz Marcin Podkalicki project.
 See:
 	https://blog.podkalicki.com/100-projects-on-attiny13/
