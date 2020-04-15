@@ -7,7 +7,11 @@
 #ifndef	_UART_H_
 #define	_UART_H_
 
+#ifdef _AVR_IOTN85_H_
+#define UART_BAUDRATE		(115200 * 4)
+#else
 #define UART_BAUDRATE		(115200 * 2)
+#endif
 #define	UART_TX_ENABLED		1 // Enable UART TX
 #define UART_TX             PB1 // Use PB3 as TX pin
 

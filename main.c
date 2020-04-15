@@ -204,8 +204,11 @@ int main(void)
 	uart_setup(); // Setup UART Tx pin as out
 
 	wdt_enable(WDTO_15MS); // Set prescaler to 15ms
+#ifdef _AVR_IOTN85_H_
+	WDTCR |= _BV(WDIE); // Enable WD irq
+#else
 	WDTCR |= _BV(WDTIE); // Enable WD irq
-
+#endif
 	cli();
 
 	while (1) {
